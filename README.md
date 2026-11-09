@@ -139,14 +139,6 @@ The API tests use an in-memory database. Azure uploads and a complete browser wo
 
 GitHub Actions restores and builds the API and MVC projects and runs the API xUnit tests on pushes and pull requests. See `.github/workflows/dotnet-ci.yml`.
 
-## Screenshots
-
-Add screenshots of the welcome page, organiser dashboard, event details, and participant results here before submission.
-
-## Part 3 demonstration video
-
-Add the unlisted YouTube walkthrough URL here before final submission. Demonstrate registration/login for both roles, organiser event creation/category/enrolment/result capture, participant enrolment/profile/results, Azure image upload, and Docker startup.
-
 ## Notes
 
 - Part 2 API remains the source of truth for business logic and SQL access.
