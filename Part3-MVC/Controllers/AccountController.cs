@@ -1,0 +1,10 @@
+using Microsoft.AspNetCore.Mvc; using RaceDay.Mvc.Models; using RaceDay.Mvc.Services; using System.Text.Json;
+namespace RaceDay.Mvc.Controllers;
+public class AccountController(RaceDayApiClient api) : Controller
+{
+    [HttpGet] public IActionResult Login()=>View(new LoginVm());
+    [HttpPost,ValidateAntiForgeryToken] public async Task<IActionResult> Login(LoginVm vm){ if(!ModelState.IsValid)return View(vm); using var r=await api.Send(HttpMethod.Post,"api/auth/login",body: new {email=vm.Email,password=vm.Password}); if(!r.IsSuccessStatusCode){ModelState.AddModelError("",await RaceDayApiClient.Error(r));return View(vm);} var setCookie=r.Headers.TryGetValues("Set-Cookie",out var vals)?vals.FirstOrDefault():null; if(string.IsNullOrEmpty(setCookie)){ModelState.AddModelError("","The API did not return a session cookie. Check the API configuration.");return View(vm);} HttpContext.Session.SetString("ApiCookie",setCookie.Split(';')[0]); using var doc=JsonDocument.Parse(await r.Content.ReadAsStringAsync()); var role=doc.RootElement.TryGetProperty("role",out var p)?p.GetString():null; var name=doc.RootElement.TryGetProperty("fullName",out var n)?n.GetString():null; HttpContext.Session.SetString("Role",role??"");HttpContext.Session.SetString("FullName",name??vm.Email);return RedirectToAction("Index","Home"); }
+    [HttpGet] public IActionResult Register()=>View(new RegisterVm());
+    [HttpPost,ValidateAntiForgeryToken] public async Task<IActionResult> Register(RegisterVm vm){if(!ModelState.IsValid)return View(vm);using var r=await api.Send(HttpMethod.Post,"api/auth/register",body: new {fullName=vm.FullName,email=vm.Email,password=vm.Password,role=vm.Role});if(!r.IsSuccessStatusCode){ModelState.AddModelError("",await RaceDayApiClient.Error(r));return View(vm);}TempData["Success"]="Account created. Please sign in.";return RedirectToAction(nameof(Login));}
+    [HttpPost,ValidateAntiForgeryToken] public async Task<IActionResult> Logout(){var cookie=HttpContext.Session.GetString("ApiCookie");if(cookie!=null)using(var r=await api.Send(HttpMethod.Post,"api/auth/logout",cookie)){}HttpContext.Session.Clear();return RedirectToAction("Index","Home");}
+}

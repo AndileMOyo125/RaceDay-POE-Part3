@@ -1,0 +1,8 @@
+using Microsoft.AspNetCore.Mvc;using RaceDay.Mvc.Models;using RaceDay.Mvc.Services;using System.Net.Http.Json;
+namespace RaceDay.Mvc.Controllers;
+public class ProfileController(RaceDayApiClient api):Controller
+{
+ string? Cookie=>HttpContext.Session.GetString("ApiCookie");
+ [HttpGet] public async Task<IActionResult> Index(){if(Cookie==null)return RedirectToAction("Login","Account");using var r=await api.Send(HttpMethod.Get,"api/users/me",Cookie);if(!r.IsSuccessStatusCode){TempData["Error"]=await RaceDayApiClient.Error(r);return RedirectToAction("Login","Account");}var u=await r.Content.ReadFromJsonAsync<UserDto>();return View(new ProfileVm{FullName=u?.FullName??"",Email=u?.Email??"",ProfileImageUrl=u?.ProfileImageUrl});}
+ [HttpPost,ValidateAntiForgeryToken] public async Task<IActionResult> Index(ProfileVm vm){if(Cookie==null)return RedirectToAction("Login","Account");if(!ModelState.IsValid)return View(vm);using var r=await api.Send(HttpMethod.Put,"api/users/me",Cookie,new{fullName=vm.FullName,email=vm.Email});if(!r.IsSuccessStatusCode){ModelState.AddModelError("",await RaceDayApiClient.Error(r));return View(vm);}HttpContext.Session.SetString("FullName",vm.FullName);if(vm.ProfileImage!=null){using var up=await api.Send(HttpMethod.Post,"api/users/me/profile-image",Cookie,file:vm.ProfileImage);if(!up.IsSuccessStatusCode){TempData["Error"]="Profile details saved, but image upload failed: "+await RaceDayApiClient.Error(up);}else{var data=await up.Content.ReadFromJsonAsync<Dictionary<string,string>>();vm.ProfileImageUrl=data?.GetValueOrDefault("profileImageUrl");}}TempData["Success"]="Your profile has been updated.";return View(vm);}
+}
