@@ -178,3 +178,5 @@ The assessment brief asks for at least 20 meaningful commits. Use commits as you
 27. Complete README, run verification and record fixes.
 
 Adapt this list to the actual order you work in and make each commit only after that feature is genuinely implemented.
+
+<img width="1359" height="682" alt="image" src="https://github.com/user-attachments/assets/895d6176-ae24-48b3-8762-389ac3b375bf" />
